@@ -2,6 +2,23 @@
 <?eclipse version="3.4"?>
 <plugin>
 
+	<extension point="org.eclipse.debug.core.launchConfigurationTypes">
+	    <launchConfigurationType
+	        name="Launch Group"
+	        delegate="com.serious.business.launch.GroupLaunchConfigurationDelegate"
+	        modes="run, debug"               
+	        id="com.serious.business.launchGroupDelegate">        
+	    </launchConfigurationType>
+	</extension>
+
+	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+	    <launchConfigurationTabGroup
+	        type="com.serious.business.launchGroupDelegate"
+	        class="com.serious.business.launch.LaunchGroupConfigurationTabGroup"
+	        id="com.serious.business.launchConfigurationTabGroup.tabGroup">
+	    </launchConfigurationTabGroup>
+	</extension>
+
    <extension
          point="org.eclipse.ui.views">
       <category
