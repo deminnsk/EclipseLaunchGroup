@@ -1,22 +1,25 @@
 package com.serious.business.launch;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.debug.core.ILaunchConfiguration;
 
+import com.serious.business.common.Pair;
+
 public class GroupLaunchConfigurationObject {
 
-	private List<ILaunchConfiguration> childs;
+	private List<Pair<ILaunchConfiguration, Map<String, Object>>> childs;
 	private boolean activated;
 	
 	public GroupLaunchConfigurationObject() {
 		super();
 	}
 	
-	public List<ILaunchConfiguration> getChilds() {
+	public List<Pair<ILaunchConfiguration, Map<String, Object>>> getChilds() {
 		return childs;
 	}
-	public void setChilds(List<ILaunchConfiguration> childs) {
+	public void setChilds(List<Pair<ILaunchConfiguration, Map<String, Object>>> childs) {
 		this.childs = childs;
 	}
 	public boolean isActivated() {

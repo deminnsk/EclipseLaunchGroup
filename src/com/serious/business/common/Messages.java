@@ -1,10 +1,10 @@
-package com.serious.business.launch;
+package com.serious.business.common;
 
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	
-	private static final String BUNDLE_NAME = "com.serious.business.messages";
+	private static final String BUNDLE_NAME = "com.serious.business.common.messages";
 
 	static {
 		reloadMessages();
