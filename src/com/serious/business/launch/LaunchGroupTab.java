@@ -1,17 +1,25 @@
 package com.serious.business.launch;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.ICheckStateProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
@@ -19,6 +27,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,8 +44,9 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 	private static final String tabName = "Launch Group";
 
-	private ILaunchConfiguration currentConfiguration;
-	
+	//private ILaunchConfiguration currentConfiguration;
+	private ILaunchConfigurationWorkingCopy workingCopy;
+	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();;
 	private CheckboxTableViewer childLaunchersViewer;
 	
 	private Button upButton;
@@ -120,6 +130,26 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		configurationsTable.setHeaderVisible(true);
 		configurationsTable.setLinesVisible(true);
 		
+		childLaunchersViewer.setCheckStateProvider(new ICheckStateProvider() {
+			
+			@Override
+			public boolean isGrayed(Object element) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean isChecked(Object element) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+		
+		childLaunchersViewer.setLabelProvider(new TableViewerLabelProvider());
+		childLaunchersViewer.setContentProvider(new ChildConfigurationsContentProvider(manager));
+		
+//		childLaunchersViewer.in
+		
 		Composite envButtonComp = new Composite(tableComp, SWT.NONE);
 		GridLayout envButtonLayout = new GridLayout();
 		envButtonLayout.marginHeight = 0;
@@ -158,13 +188,24 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		
-		this.currentConfiguration = configuration;
+		try {
+			this.workingCopy = configuration.getWorkingCopy();
+		} catch (CoreException e) {
+			this.workingCopy = null;
+			e.printStackTrace();
+		}
 		
+		childLaunchersViewer.setInput(workingCopy.getOriginal());
 	}
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-		// TODO Auto-generated method stub
+		
+		try {
+			this.workingCopy.doSave();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -198,42 +239,22 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	
 	@SuppressWarnings("unchecked")
 	private void addChildConfiguration(ILaunchConfiguration configuration) {
-		
-		GroupLaunchConfigurationObject object = null;
-		
-		
-		//currentConfiguration.getWorkingCopy().
+
 		try {
 			
-			ILaunchConfigurationWorkingCopy workingCopy = currentConfiguration.getWorkingCopy();
+			//ILaunchManager mgr = DebugPlugin.getDefault().getLaunchManager();
+
+			List<String> childs = 
+					workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
+							new ArrayList<String>());
 			
-			if (currentConfiguration != null 
-					&& workingCopy.hasAttribute(Constants.GROUP_CONFIGURATION_KEY)) {
-				
-				object = (GroupLaunchConfigurationObject) 
-						workingCopy.getAttributes().get(Constants.GROUP_CONFIGURATION_KEY);
-				
-				
-			} else {
-				object = new GroupLaunchConfigurationObject();
-				//workingCopy.setAttribute(Constants.GROUP_CONFIGURATION_KEY, Constants.GROUP_CONFIGURATION_KEY);
-				workingCopy.getAttributes().put(object, Constants.GROUP_CONFIGURATION_KEY);
-				//currentConfiguration.getWorkingCopy().doSave();
-			}
+			childs.add(configuration.getMemento());
+			workingCopy.setAttribute(Constants.GROUP_CONFIGURATION_KEY, childs);
 			
-			List<Pair<ILaunchConfiguration, Map<String, Object>>> childs = object.getChilds();
-			
-			if (childs == null) {
-				childs = new ArrayList<Pair<ILaunchConfiguration,Map<String,Object>>>();
-			}
-			
-			Pair<ILaunchConfiguration, Map<String, Object>> pair = 
-					new Pair<ILaunchConfiguration, Map<String,Object>>(configuration, new HashMap<String, Object>());
-			
-			childs.add(pair);
-			currentConfiguration = workingCopy.doSave();
 			System.out.println("Childs count: " + childs.size());
+			setDirty(true);
 			updateLaunchConfigurationDialog();
+			
 			
 		} catch (CoreException e) {
 			e.printStackTrace();
