@@ -1,5 +1,6 @@
 package com.serious.business.launch;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -7,8 +8,14 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 
 import com.serious.business.common.Pair;
 
-public class GroupLaunchConfigurationObject {
+public class GroupLaunchConfigurationObject implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8016730781091462140L;
+	
+	
 	private List<Pair<ILaunchConfiguration, Map<String, Object>>> childs;
 	private boolean activated;
 	

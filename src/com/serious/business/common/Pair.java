@@ -1,8 +1,15 @@
 package com.serious.business.common;
 
-public class Pair<K, V> {
+import java.io.Serializable;
 
-    private final K first;
+public class Pair<K, V> implements Serializable {
+
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4446947041855421840L;
+	
+	private final K first;
     private final V second;
 
     public static <K, V> Pair<K, V> createPair(K first, V second) {

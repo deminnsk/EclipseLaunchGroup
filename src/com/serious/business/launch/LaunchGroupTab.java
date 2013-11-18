@@ -1,13 +1,19 @@
 package com.serious.business.launch;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.internal.ui.Pair;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -20,12 +26,17 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
+import com.serious.business.common.Constants;
 import com.serious.business.common.Messages;
+import com.serious.business.common.Pair;
+import com.serious.business.launchwizard.LaunchConfigurationWizard;
 
 public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 	private static final String tabName = "Launch Group";
 
+	private ILaunchConfiguration currentConfiguration;
+	
 	private CheckboxTableViewer childLaunchersViewer;
 	
 	private Button upButton;
@@ -53,6 +64,10 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			} else if (source == downButton) {
 //				handleParametersEditButtonSelected();
 			} else if (source == editButton) {
+//				handleParametersRemoveButtonSelected();
+			} else if (source == addButton) {
+				handleAddButton();
+			} else if (source == removeButton) {
 //				handleParametersRemoveButtonSelected();
 			}
 			
@@ -142,7 +157,8 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
-		// TODO Auto-generated method stub
+		
+		this.currentConfiguration = configuration;
 		
 	}
 
@@ -165,5 +181,68 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		
 	}
 	
+	private void handleAddButton(){
+		
+		LaunchConfigurationWizard wizard = new LaunchConfigurationWizard();
+		wizard.addHandler(new ConfigurationSelectedHandler() {
+			
+			@Override
+			public void onResult(ILaunchConfiguration configuration) {
+				addChildConfiguration(configuration);
+			}
+		});
+		
+		WizardDialog dialog = new WizardDialog(getShell(), wizard);
+		dialog.open();
+	}
 	
+	@SuppressWarnings("unchecked")
+	private void addChildConfiguration(ILaunchConfiguration configuration) {
+		
+		GroupLaunchConfigurationObject object = null;
+		
+		
+		//currentConfiguration.getWorkingCopy().
+		try {
+			
+			ILaunchConfigurationWorkingCopy workingCopy = currentConfiguration.getWorkingCopy();
+			
+			if (currentConfiguration != null 
+					&& workingCopy.hasAttribute(Constants.GROUP_CONFIGURATION_KEY)) {
+				
+				object = (GroupLaunchConfigurationObject) 
+						workingCopy.getAttributes().get(Constants.GROUP_CONFIGURATION_KEY);
+				
+				
+			} else {
+				object = new GroupLaunchConfigurationObject();
+				//workingCopy.setAttribute(Constants.GROUP_CONFIGURATION_KEY, Constants.GROUP_CONFIGURATION_KEY);
+				workingCopy.getAttributes().put(object, Constants.GROUP_CONFIGURATION_KEY);
+				//currentConfiguration.getWorkingCopy().doSave();
+			}
+			
+			List<Pair<ILaunchConfiguration, Map<String, Object>>> childs = object.getChilds();
+			
+			if (childs == null) {
+				childs = new ArrayList<Pair<ILaunchConfiguration,Map<String,Object>>>();
+			}
+			
+			Pair<ILaunchConfiguration, Map<String, Object>> pair = 
+					new Pair<ILaunchConfiguration, Map<String,Object>>(configuration, new HashMap<String, Object>());
+			
+			childs.add(pair);
+			currentConfiguration = workingCopy.doSave();
+			System.out.println("Childs count: " + childs.size());
+			updateLaunchConfigurationDialog();
+			
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public interface ConfigurationSelectedHandler{
+		void onResult(ILaunchConfiguration configuration);
+	}
+
 }
