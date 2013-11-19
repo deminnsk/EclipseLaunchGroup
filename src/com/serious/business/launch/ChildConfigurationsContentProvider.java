@@ -2,6 +2,7 @@ package com.serious.business.launch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -10,6 +11,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import com.serious.business.common.Constants;
+import com.serious.business.common.utils.MapUtils;
 
 public class ChildConfigurationsContentProvider implements IStructuredContentProvider {
 
@@ -34,25 +36,27 @@ public class ChildConfigurationsContentProvider implements IStructuredContentPro
 	@Override
 	public Object[] getElements(Object inputElement) {
 		
-		ILaunchConfiguration configuration = (ILaunchConfiguration) inputElement;
-		List<ILaunchConfiguration> configurations = new ArrayList<ILaunchConfiguration>();
+//		ILaunchConfiguration configuration = (ILaunchConfiguration) inputElement;
+		List<Map<String, String>> configurations = new ArrayList<Map<String, String>>();
 		
-		List<String> sources = null;
-		try {
-			sources = configuration.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-					new ArrayList<String>());
+		List<String> sources = (List<String>) inputElement;
+//		try {
+//			sources = configuration.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
+//					new ArrayList<String>());
 			
-			for (String launchConfigurationMemento : sources) {
-				configurations.add(manager.getLaunchConfiguration(launchConfigurationMemento));
+			for (String customMemento : sources) {
+				
+				Map<String, String> config = MapUtils.mapFromString(customMemento);
+				configurations.add(config);
 			}
 			
 			return configurations.toArray();
 			
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+//		} catch (CoreException e) {
+//			e.printStackTrace();
+//		}
 
-		return null;
+//		return null;
 	}
 
 }

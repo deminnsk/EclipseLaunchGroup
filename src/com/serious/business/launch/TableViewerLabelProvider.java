@@ -1,14 +1,21 @@
 package com.serious.business.launch;
 
+import java.util.Map;
+
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.internal.core.LaunchConfiguration;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-public class TableViewerLabelProvider implements ITableLabelProvider {
+import com.serious.business.common.Constants;
 
+public class TableViewerLabelProvider implements ITableLabelProvider {
+	
+	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
+	
 	@Override
 	public void addListener(ILabelProviderListener listener) {
 		// TODO Auto-generated method stub
@@ -42,7 +49,16 @@ public class TableViewerLabelProvider implements ITableLabelProvider {
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
 		
-		ILaunchConfiguration configuration = (ILaunchConfiguration) element;
+		Map<String, String> config = (Map<String, String>) element;
+		String launchMemento = config.get(Constants.MEMENTO_KEY);
+		
+		ILaunchConfiguration configuration = null;
+		try {
+			configuration = manager.getLaunchConfiguration(launchMemento);
+		} catch (CoreException e1) {
+			e1.printStackTrace();
+			return null;
+		}
 		
 		if (columnIndex == 0) {
 			

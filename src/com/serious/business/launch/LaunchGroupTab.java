@@ -1,16 +1,14 @@
 package com.serious.business.launch;
 
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
@@ -18,16 +16,13 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ICheckStateProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -37,17 +32,18 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import com.serious.business.common.Constants;
 import com.serious.business.common.Messages;
-import com.serious.business.common.Pair;
+import com.serious.business.common.utils.MapUtils;
 import com.serious.business.launchwizard.LaunchConfigurationWizard;
 
 public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 	private static final String tabName = "Launch Group";
 
-	//private ILaunchConfiguration currentConfiguration;
 	private ILaunchConfigurationWorkingCopy workingCopy;
-	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();;
+	private List<String> childConfigurations;
+	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 	private CheckboxTableViewer childLaunchersViewer;
+	private int selectionIndex = -1;
 	
 	private Button upButton;
 	private Button downButton;
@@ -55,12 +51,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private Button addButton;
 	private Button removeButton;
 	
-	private class GroupTabListener extends SelectionAdapter implements ModifyListener {
-
-		@Override
-		public void modifyText(ModifyEvent e) {
-			updateLaunchConfigurationDialog();
-		}
+	private class GroupTabListener extends SelectionAdapter {
 		
 		@Override
 		public void widgetSelected(SelectionEvent e) {
@@ -72,15 +63,16 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			} else if (source == upButton) {
 				handleUpButton();
 			} else if (source == downButton) {
-//				handleParametersEditButtonSelected();
+				handleDownButton();
 			} else if (source == editButton) {
-//				handleParametersRemoveButtonSelected();
+
 			} else if (source == addButton) {
 				handleAddButton();
 			} else if (source == removeButton) {
-//				handleParametersRemoveButtonSelected();
+				handleRemoveButton();
 			}
 			
+			updateButtonsState();
 		}
 		
 	}
@@ -90,7 +82,6 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		
 		Composite comp = new Composite(parent, SWT.NONE);
 		setControl(comp);
-		//PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(),	IJavaDebugHelpContextIds.LAUNCH_CONFIGURATION_DIALOG_APPLET_PARAMETERS_TAB);
 		GridLayout topLayout = new GridLayout();
 		comp.setLayout(topLayout);		
 		GridData gd;
@@ -134,21 +125,26 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			
 			@Override
 			public boolean isGrayed(Object element) {
-				// TODO Auto-generated method stub
 				return false;
 			}
 			
 			@Override
 			public boolean isChecked(Object element) {
-				// TODO Auto-generated method stub
-				return false;
+				
+				Map<String, String> config = (Map<String, String>) element;
+				return Boolean.valueOf(config.get(Constants.ACTIVE_KEY));
 			}
 		});
 		
 		childLaunchersViewer.setLabelProvider(new TableViewerLabelProvider());
 		childLaunchersViewer.setContentProvider(new ChildConfigurationsContentProvider(manager));
-		
-//		childLaunchersViewer.in
+		childLaunchersViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				selectionIndex = childLaunchersViewer.getTable().getSelectionIndex();
+				updateButtonsState();
+			}
+		});
 		
 		Composite envButtonComp = new Composite(tableComp, SWT.NONE);
 		GridLayout envButtonLayout = new GridLayout();
@@ -166,8 +162,8 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		downButton = createPushButton(envButtonComp, Messages.message_button_down, null); 
 		downButton.addSelectionListener(listener);
 				
-		editButton = createPushButton(envButtonComp, Messages.message_button_edit, null); 
-		editButton.addSelectionListener(listener);
+//		editButton = createPushButton(envButtonComp, Messages.message_button_edit, null); 
+//		editButton.addSelectionListener(listener);
 				
 		addButton = createPushButton(envButtonComp, Messages.message_button_add, null);
 		addButton.addSelectionListener(listener);
@@ -180,45 +176,110 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	}
 
 	@Override
-	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-		// TODO Auto-generated method stub
-		
+	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {		
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		
 		try {
 			this.workingCopy = configuration.getWorkingCopy();
+			
+			this.childConfigurations = new ArrayList<String>(workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
+					new ArrayList<String>()));
+
 		} catch (CoreException e) {
 			this.workingCopy = null;
 			e.printStackTrace();
 		}
 		
-		childLaunchersViewer.setInput(workingCopy.getOriginal());
+		childLaunchersViewer.setInput(this.childConfigurations);
 	}
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		
-		try {
-			this.workingCopy.doSave();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		configuration.setAttribute(Constants.GROUP_CONFIGURATION_KEY, this.childConfigurations);
+		configuration.setAttribute("eee", (String)null);
 		
-	}
+		childLaunchersViewer.refresh();
 
+	}
+	
 	@Override
 	public String getName() {
 		return tabName;
 	}
 
+	@Override
+	public boolean canSave() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	@Override
+	public boolean isValid(ILaunchConfiguration launchConfig) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
 	private void updateButtonsState(){
+		
+		if (selectionIndex != -1) {
+			removeButton.setEnabled(true);
+			
+			upButton.setEnabled(true);
+			downButton.setEnabled(true);
+			
+			if (selectionIndex == 0) {
+				upButton.setEnabled(false);
+			} 
+			
+			if (selectionIndex == childConfigurations.size() - 1) {
+				downButton.setEnabled(false);
+			}
+			
+		} else {
+			removeButton.setEnabled(false);
+			upButton.setEnabled(false);
+			downButton.setEnabled(false);
+		}
 		
 	}
 	
 	private void handleUpButton(){
+
+		if (selectionIndex != -1) {
+			Collections.swap(childConfigurations, selectionIndex, selectionIndex - 1);
+			selectionIndex -= 1;
+		}
+		
+//		setDirty(true);
+		updateLaunchConfigurationDialog();
+	}
+	
+	private void handleDownButton(){
+		
+		if (selectionIndex != -1) {
+			Collections.swap(childConfigurations, selectionIndex, selectionIndex + 1);
+			selectionIndex += 1;
+		}
+		
+//		setDirty(true);
+		updateLaunchConfigurationDialog();
+	}
+	
+	private void handleRemoveButton(){
+		
+		if (selectionIndex != -1) {
+			childConfigurations.remove(selectionIndex);
+			//childConfigurations.trimToSize();
+		
+		}
+		
+//		setDirty(true);
+		updateLaunchConfigurationDialog();
 		
 	}
 	
@@ -237,22 +298,15 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		dialog.open();
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void addChildConfiguration(ILaunchConfiguration configuration) {
 
 		try {
 			
-			//ILaunchManager mgr = DebugPlugin.getDefault().getLaunchManager();
-
-			List<String> childs = 
-					workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-							new ArrayList<String>());
+			Map<String, String> recordMap = new HashMap<String, String>();
+			recordMap.put(Constants.MEMENTO_KEY, configuration.getMemento());
+			recordMap.put(Constants.ACTIVE_KEY, String.valueOf(true));
 			
-			childs.add(configuration.getMemento());
-			workingCopy.setAttribute(Constants.GROUP_CONFIGURATION_KEY, childs);
-			
-			System.out.println("Childs count: " + childs.size());
-			setDirty(true);
+			this.childConfigurations.add(MapUtils.stringFromMap(recordMap));
 			updateLaunchConfigurationDialog();
 			
 			
