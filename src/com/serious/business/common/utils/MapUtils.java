@@ -1,6 +1,8 @@
 package com.serious.business.common.utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -37,4 +39,28 @@ public class MapUtils {
 		
 	}
 	
+	
+	public static List<String> stringListFromMapList(List<Map<String, String>> list){
+		
+		List<String> result = new ArrayList<String>();
+		
+		for (Map<String, String> map : list) {
+			result.add(stringFromMap(map));
+		}
+		
+		return result;
+		
+	}
+	
+	public static List<Map<String, String>> mapListFromStringList(List<String> list){
+		
+		List<Map<String, String>> result = new ArrayList<Map<String,String>>();
+		
+		for (String string : list) {
+			result.add(mapFromString(string));
+		}
+		
+		return result;
+		
+	}
 }

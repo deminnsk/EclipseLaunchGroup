@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
@@ -13,11 +14,14 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
@@ -40,9 +44,9 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private static final String tabName = "Launch Group";
 
 	private ILaunchConfigurationWorkingCopy workingCopy;
-	private List<String> childConfigurations;
+	private List<Map<String, String>> configurations;
 	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
-	private CheckboxTableViewer childLaunchersViewer;
+	private CheckboxTableViewer configurationsTableViewer;
 	private int selectionIndex = -1;
 	
 	private Button upButton;
@@ -58,7 +62,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			
 			Object source = e.getSource();
 			
-			if (source == childLaunchersViewer.getTable() || source == childLaunchersViewer) {
+			if (source == configurationsTableViewer.getTable() || source == configurationsTableViewer) {
 				updateButtonsState();
 			} else if (source == upButton) {
 				handleUpButton();
@@ -105,9 +109,9 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		parametersLayout.marginWidth = 0;
 		tableComp.setLayout(parametersLayout);
 
-		childLaunchersViewer = CheckboxTableViewer.newCheckList(tableComp, SWT.NONE);
+		configurationsTableViewer = CheckboxTableViewer.newCheckList(tableComp, SWT.NONE);
 		
-		Table configurationsTable = childLaunchersViewer.getTable();
+		Table configurationsTable = configurationsTableViewer.getTable();
 		gd = new GridData(GridData.FILL_BOTH);
 		configurationsTable.setLayoutData(gd);		
 		TableColumn column1 = new TableColumn(configurationsTable, SWT.NONE);
@@ -121,7 +125,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		configurationsTable.setHeaderVisible(true);
 		configurationsTable.setLinesVisible(true);
 		
-		childLaunchersViewer.setCheckStateProvider(new ICheckStateProvider() {
+		configurationsTableViewer.setCheckStateProvider(new ICheckStateProvider() {
 			
 			@Override
 			public boolean isGrayed(Object element) {
@@ -136,15 +140,29 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			}
 		});
 		
-		childLaunchersViewer.setLabelProvider(new TableViewerLabelProvider());
-		childLaunchersViewer.setContentProvider(new ChildConfigurationsContentProvider(manager));
-		childLaunchersViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		configurationsTableViewer.setLabelProvider(new TableViewerLabelProvider());
+		configurationsTableViewer.setContentProvider(new ChildConfigurationsContentProvider(manager));
+		configurationsTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				selectionIndex = childLaunchersViewer.getTable().getSelectionIndex();
+				selectionIndex = configurationsTableViewer.getTable().getSelectionIndex();
 				updateButtonsState();
 			}
 		});
+		configurationsTableViewer.addCheckStateListener(new ICheckStateListener() {
+			
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				
+				int index = LaunchGroupTab.this.configurations.indexOf(event.getElement());
+				
+				Map<String, String> configuration = LaunchGroupTab.this.configurations.get(index);
+				configuration.put(Constants.ACTIVE_KEY, String.valueOf(event.getChecked()));
+				updateLaunchConfigurationDialog();
+
+			}
+		});
+		
 		
 		Composite envButtonComp = new Composite(tableComp, SWT.NONE);
 		GridLayout envButtonLayout = new GridLayout();
@@ -186,24 +204,34 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		try {
 			this.workingCopy = configuration.getWorkingCopy();
 			
-			this.childConfigurations = new ArrayList<String>(workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
+			List<String> stringConfigurations = new ArrayList<String>(workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
 					new ArrayList<String>()));
+			
+			if (this.configurations == null) {
+				this.configurations = new ArrayList<Map<String,String>>();
+			}
+			
+			this.configurations.clear();
+			for (String stringConf : stringConfigurations) {
+				this.configurations.add(MapUtils.mapFromString(stringConf));
+			}
 
 		} catch (CoreException e) {
 			this.workingCopy = null;
 			e.printStackTrace();
 		}
 		
-		childLaunchersViewer.setInput(this.childConfigurations);
+		configurationsTableViewer.setInput(this.configurations);
 	}
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		
-		configuration.setAttribute(Constants.GROUP_CONFIGURATION_KEY, this.childConfigurations);
+		configuration.setAttribute(Constants.GROUP_CONFIGURATION_KEY, 
+				MapUtils.stringListFromMapList(this.configurations));
 		configuration.setAttribute("eee", (String)null);
 		
-		childLaunchersViewer.refresh();
+		configurationsTableViewer.refresh();
 
 	}
 	
@@ -212,23 +240,11 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		return tabName;
 	}
 
-	@Override
-	public boolean canSave() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-	
-	@Override
-	public boolean isValid(ILaunchConfiguration launchConfig) {
-		// TODO Auto-generated method stub
-		return true;
-	}
-	
 	private void updateButtonsState(){
 		
 		if (selectionIndex != -1) {
-			removeButton.setEnabled(true);
 			
+			removeButton.setEnabled(true);
 			upButton.setEnabled(true);
 			downButton.setEnabled(true);
 			
@@ -236,7 +252,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 				upButton.setEnabled(false);
 			} 
 			
-			if (selectionIndex == childConfigurations.size() - 1) {
+			if (selectionIndex == configurations.size() - 1) {
 				downButton.setEnabled(false);
 			}
 			
@@ -251,34 +267,34 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private void handleUpButton(){
 
 		if (selectionIndex != -1) {
-			Collections.swap(childConfigurations, selectionIndex, selectionIndex - 1);
-			selectionIndex -= 1;
+			Collections.swap(configurations, selectionIndex, selectionIndex - 1);
+			configurationsTableViewer.refresh();
+			select(selectionIndex - 1);
 		}
 		
-//		setDirty(true);
 		updateLaunchConfigurationDialog();
 	}
 	
 	private void handleDownButton(){
 		
 		if (selectionIndex != -1) {
-			Collections.swap(childConfigurations, selectionIndex, selectionIndex + 1);
-			selectionIndex += 1;
+			Collections.swap(configurations, selectionIndex, selectionIndex + 1);
+			configurationsTableViewer.refresh();
+			select(selectionIndex + 1);
 		}
 		
-//		setDirty(true);
 		updateLaunchConfigurationDialog();
 	}
 	
 	private void handleRemoveButton(){
 		
 		if (selectionIndex != -1) {
-			childConfigurations.remove(selectionIndex);
-			//childConfigurations.trimToSize();
+			configurations.remove(selectionIndex);
+			configurationsTableViewer.refresh();
+			select(selectionIndex);
 		
 		}
 		
-//		setDirty(true);
 		updateLaunchConfigurationDialog();
 		
 	}
@@ -298,6 +314,20 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		dialog.open();
 	}
 	
+	private void select(int index) {
+		
+		int indexForSelect = index;
+		
+		if (index > configurations.size() - 1) {
+			indexForSelect = configurations.size() - 1;
+		} else if (index < 0) {
+			indexForSelect = 0;
+		}
+	
+		selectionIndex = indexForSelect;
+		configurationsTableViewer.getTable().select(indexForSelect);
+	}
+	
 	private void addChildConfiguration(ILaunchConfiguration configuration) {
 
 		try {
@@ -306,7 +336,10 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			recordMap.put(Constants.MEMENTO_KEY, configuration.getMemento());
 			recordMap.put(Constants.ACTIVE_KEY, String.valueOf(true));
 			
-			this.childConfigurations.add(MapUtils.stringFromMap(recordMap));
+			// hack to make configuration unique for save
+			recordMap.put("any_key", UUID.randomUUID().toString());
+			
+			this.configurations.add(recordMap);
 			updateLaunchConfigurationDialog();
 			
 			

@@ -37,26 +37,8 @@ public class ChildConfigurationsContentProvider implements IStructuredContentPro
 	public Object[] getElements(Object inputElement) {
 		
 //		ILaunchConfiguration configuration = (ILaunchConfiguration) inputElement;
-		List<Map<String, String>> configurations = new ArrayList<Map<String, String>>();
-		
-		List<String> sources = (List<String>) inputElement;
-//		try {
-//			sources = configuration.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-//					new ArrayList<String>());
-			
-			for (String customMemento : sources) {
-				
-				Map<String, String> config = MapUtils.mapFromString(customMemento);
-				configurations.add(config);
-			}
-			
-			return configurations.toArray();
-			
-//		} catch (CoreException e) {
-//			e.printStackTrace();
-//		}
-
-//		return null;
+		List<Map<String, String>> configurations = (List<Map<String, String>>) inputElement;
+		return configurations.toArray();
 	}
 
 }
