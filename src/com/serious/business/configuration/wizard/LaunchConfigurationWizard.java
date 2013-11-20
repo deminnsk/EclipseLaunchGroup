@@ -1,9 +1,9 @@
-package com.serious.business.launchwizard;
+package com.serious.business.configuration.wizard;
 
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jface.wizard.Wizard;
 
-import com.serious.business.launch.LaunchGroupTab.ConfigurationSelectedHandler;
+import com.serious.business.configuration.tabs.LaunchGroupTab.ConfigurationSelectedHandler;
 
 public class LaunchConfigurationWizard extends Wizard {
 

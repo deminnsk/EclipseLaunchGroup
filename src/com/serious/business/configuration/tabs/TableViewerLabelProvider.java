@@ -1,4 +1,4 @@
-package com.serious.business.launch;
+package com.serious.business.configuration.tabs;
 
 import java.util.Map;
 

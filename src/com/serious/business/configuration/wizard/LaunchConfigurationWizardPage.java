@@ -1,4 +1,4 @@
-package com.serious.business.launchwizard;
+package com.serious.business.configuration.wizard;
 
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;

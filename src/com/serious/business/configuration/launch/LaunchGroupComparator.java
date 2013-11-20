@@ -1,4 +1,4 @@
-package com.serious.business.launch;
+package com.serious.business.configuration.launch;
 
 import java.util.Comparator;
 import java.util.List;

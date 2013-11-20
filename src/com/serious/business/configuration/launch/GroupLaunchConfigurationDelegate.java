@@ -1,5 +1,6 @@
-package com.serious.business.launch;
+package com.serious.business.configuration.launch;
 
+import java.beans.XMLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,8 +23,16 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
+		
+//		XMLEncoder encoder = new XM
 		// TODO Auto-generated method stub
-		hasCycles(configuration, new HashSet<ILaunchConfiguration>());
+//		configuration.launch(mode, monitor);
+//		.GroupLaunchConfigurationDelegate
+//		DebugPlugin.getDefault().getLaunchManager().isExistingLaunchConfigurationName(name)
+//		IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE;
+		
+//		Launch
+//		hasCycles(configuration, new HashSet<ILaunchConfiguration>());
 	}
 
 	

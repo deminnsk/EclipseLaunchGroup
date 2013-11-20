@@ -1,4 +1,4 @@
-package com.serious.business.launch;
+package com.serious.business.configuration.tabs;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +21,6 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
@@ -37,7 +36,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import com.serious.business.common.Constants;
 import com.serious.business.common.Messages;
 import com.serious.business.common.utils.MapUtils;
-import com.serious.business.launchwizard.LaunchConfigurationWizard;
+import com.serious.business.configuration.wizard.LaunchConfigurationWizard;
 
 public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
@@ -117,7 +116,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		TableColumn column1 = new TableColumn(configurationsTable, SWT.NONE);
 		column1.setText(Messages.message_child_name);
 		TableColumn column2 = new TableColumn(configurationsTable, SWT.NONE);
-		column2.setText("text");
+		column2.setText("");
 		TableLayout tableLayout = new TableLayout();
 		configurationsTable.setLayout(tableLayout);
 		tableLayout.addColumnData(new ColumnWeightData(100));
@@ -155,7 +154,6 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				
 				int index = LaunchGroupTab.this.configurations.indexOf(event.getElement());
-				
 				Map<String, String> configuration = LaunchGroupTab.this.configurations.get(index);
 				configuration.put(Constants.ACTIVE_KEY, String.valueOf(event.getChecked()));
 				updateLaunchConfigurationDialog();
