@@ -11,7 +11,7 @@ import org.eclipse.swt.graphics.Image;
 
 import com.serious.business.configuration.model.ChildLaunchConfiguration;
 
-public class TableViewerLabelProvider implements ITableLabelProvider, ICheckStateProvider {
+public class ChildConfigurationsLabelProvider implements ITableLabelProvider, ICheckStateProvider {
 	
 	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 	
@@ -51,17 +51,8 @@ public class TableViewerLabelProvider implements ITableLabelProvider, ICheckStat
 		}
 		
 		if (columnIndex == 0) {
-			
 			return configuration.getName();
-			
-		} else if (columnIndex == 1) {
-			try {
-				return configuration.getCategory();
-			} catch (CoreException e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
+		} 
 		
 		return null;
 	}

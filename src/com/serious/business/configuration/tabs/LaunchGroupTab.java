@@ -115,7 +115,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		configurationsTable.setHeaderVisible(true);
 		configurationsTable.setLinesVisible(true);
 		
-		TableViewerLabelProvider provider = new TableViewerLabelProvider();
+		ChildConfigurationsLabelProvider provider = new ChildConfigurationsLabelProvider();
 		
 		configurationsTableViewer.setCheckStateProvider(provider);
 		configurationsTableViewer.setLabelProvider(provider);

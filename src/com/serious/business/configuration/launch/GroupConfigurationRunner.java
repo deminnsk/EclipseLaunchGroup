@@ -44,9 +44,11 @@ public class GroupConfigurationRunner implements IGroupConfigurationRunner {
 		
 		//then launch configurations
 		for (ChildLaunchConfiguration childLaunchConfiguration : configuration2.getChilds()) {
-			childLaunchConfiguration.toLaunchConfiguration().launch(mode, monitor);
 			
-//			DebugUITools.launch(childLaunchConfiguration.toLaunchConfiguration().getWorkingCopy().doSave(), ILaunchManager.RUN_MODE);
+			if (childLaunchConfiguration.isActivated()) {
+				childLaunchConfiguration.toLaunchConfiguration().launch(mode, monitor);
+			}
+			
 		}
 	}
 

@@ -31,7 +31,6 @@ public class ConfigurationsContentProvider implements ITreeContentProvider {
 		try {
 			results = manager.getLaunchConfigurations((ILaunchConfigurationType)arg0);
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -57,7 +56,6 @@ public class ConfigurationsContentProvider implements ITreeContentProvider {
 			try {
 				results = manager.getLaunchConfigurations((ILaunchConfigurationType)arg0);
 			} catch (CoreException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			

@@ -4,16 +4,17 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 
 public class ExistFilter implements IConfigurationFilter {
 
+	ILaunchConfiguration configuration;
+	
 	@Override
 	public boolean doFilter(ILaunchConfiguration configuration) {
-		// TODO Auto-generated method stub
-		return false;
+		this.configuration = configuration;
+		return ! configuration.exists();
 	}
 
 	@Override
 	public String getErrorMessage() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Configuration do not exists: " + configuration.getName();
 	}
 
 }

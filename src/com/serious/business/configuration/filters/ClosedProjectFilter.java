@@ -4,16 +4,22 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 
 public class ClosedProjectFilter implements IConfigurationFilter {
 
+	ILaunchConfiguration configuration;
+	
+	@SuppressWarnings("restriction")
 	@Override
 	public boolean doFilter(ILaunchConfiguration configuration) {
-		// TODO Auto-generated method stub
-		return false;
+		this.configuration = configuration;
+		
+		org.eclipse.debug.internal.ui.launchConfigurations.ClosedProjectFilter filter = 
+				new org.eclipse.debug.internal.ui.launchConfigurations.ClosedProjectFilter();
+		
+		return ! filter.select(null, null, configuration);
 	}
 
 	@Override
 	public String getErrorMessage() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Project for configuration closed or configuration do not exist: " + configuration.getName();
 	}
 
 }
