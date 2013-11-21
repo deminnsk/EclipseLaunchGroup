@@ -5,6 +5,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 
 import com.serious.business.configuration.filters.ClosedProjectFilter;
 import com.serious.business.configuration.filters.CycleFilter;
@@ -26,9 +28,19 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
 		try {
 			runner.runConfiguration(configuration, mode, monitor);
 		} catch (FilterException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
+			showError("Error", e.getLocalizedMessage());			
 		}
 
 	}
 
+	public void showError(final String title, final String message) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				MessageDialog.openError(null, title, message);
+			}
+		});
+	}
+	
 }

@@ -7,13 +7,21 @@
 	        name="Launch Group"
 	        delegate="com.serious.business.configuration.launch.GroupLaunchConfigurationDelegate"
 	        modes="run, debug"               
-	        id="com.serious.business.launchGroupDelegate">        
+	        id="com.serious.business.launchGroupConfiguration">        
 	    </launchConfigurationType>
+	</extension>
+	
+	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+	    <launchConfigurationTypeImage
+	        icon="icons/start.png"
+	        configTypeID="com.serious.business.launchGroupConfiguration"
+	        id="com.serious.business.launchGroupConfigurationIcon">
+	    </launchConfigurationTypeImage>
 	</extension>
 
 	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
 	    <launchConfigurationTabGroup
-	        type="com.serious.business.launchGroupDelegate"
+	        type="com.serious.business.launchGroupConfiguration"
 	        class="com.serious.business.configuration.tabs.LaunchGroupConfigurationTabGroup"
 	        id="com.serious.business.launchConfigurationTabGroup.tabGroup">
 	    </launchConfigurationTabGroup>
