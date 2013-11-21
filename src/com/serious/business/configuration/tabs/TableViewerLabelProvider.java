@@ -4,13 +4,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
 import com.serious.business.configuration.model.ChildLaunchConfiguration;
 
-public class TableViewerLabelProvider implements ITableLabelProvider {
+public class TableViewerLabelProvider implements ITableLabelProvider, ICheckStateProvider {
 	
 	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 	
@@ -65,4 +66,17 @@ public class TableViewerLabelProvider implements ITableLabelProvider {
 		return null;
 	}
 
+	@Override
+	public boolean isGrayed(Object element) {
+		return false;
+	}
+	
+	@Override
+	public boolean isChecked(Object element) {
+		
+		ChildLaunchConfiguration childLaunchConfiguration = (ChildLaunchConfiguration) element;
+		return childLaunchConfiguration.isActivated();
+
+	}
+	
 }

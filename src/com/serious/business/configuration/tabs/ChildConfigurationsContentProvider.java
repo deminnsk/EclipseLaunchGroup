@@ -1,6 +1,5 @@
 package com.serious.business.configuration.tabs;
 
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
@@ -8,7 +7,7 @@ import com.serious.business.configuration.model.GroupLaunchConfiguration;
 
 public class ChildConfigurationsContentProvider implements IStructuredContentProvider {
 
-	public ChildConfigurationsContentProvider(ILaunchManager manager) {
+	public ChildConfigurationsContentProvider() {
 		super();
 	}
 

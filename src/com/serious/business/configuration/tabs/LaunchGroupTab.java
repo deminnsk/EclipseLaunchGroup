@@ -3,17 +3,14 @@ package com.serious.business.configuration.tabs;
 import java.util.Collections;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableLayout;
@@ -39,7 +36,6 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private static final String tabName = "Launch Group";
 
 	private GroupLaunchConfiguration groupLaunchConfiguration;
-	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 	private CheckboxTableViewer configurationsTableViewer;
 	private int selectionIndex = -1;
 	
@@ -119,24 +115,12 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		configurationsTable.setHeaderVisible(true);
 		configurationsTable.setLinesVisible(true);
 		
-		configurationsTableViewer.setCheckStateProvider(new ICheckStateProvider() {
-			
-			@Override
-			public boolean isGrayed(Object element) {
-				return false;
-			}
-			
-			@Override
-			public boolean isChecked(Object element) {
-				
-				ChildLaunchConfiguration childLaunchConfiguration = (ChildLaunchConfiguration) element;
-				return childLaunchConfiguration.isActivated();
-
-			}
-		});
+		TableViewerLabelProvider provider = new TableViewerLabelProvider();
 		
-		configurationsTableViewer.setLabelProvider(new TableViewerLabelProvider());
-		configurationsTableViewer.setContentProvider(new ChildConfigurationsContentProvider(manager));
+		configurationsTableViewer.setCheckStateProvider(provider);
+		configurationsTableViewer.setLabelProvider(provider);
+		configurationsTableViewer.setContentProvider(new ChildConfigurationsContentProvider());
+		
 		configurationsTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -145,18 +129,13 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			}
 		});
 		configurationsTableViewer.addCheckStateListener(new ICheckStateListener() {
-			
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				//TODO: fix
-//				int index = LaunchGroupTab.this.configurations.indexOf(event.getElement());
-//				Map<String, String> configuration = LaunchGroupTab.this.configurations.get(index);
-//				configuration.put(Constants.ACTIVE_KEY, String.valueOf(event.getChecked()));
-//				updateLaunchConfigurationDialog();
-
+				ChildLaunchConfiguration conf = (ChildLaunchConfiguration) event.getElement();
+				conf.setActivated(event.getChecked());
+				updateLaunchConfigurationDialog();
 			}
 		});
-		
 		
 		Composite envButtonComp = new Composite(tableComp, SWT.NONE);
 		GridLayout envButtonLayout = new GridLayout();
