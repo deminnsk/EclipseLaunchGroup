@@ -1,11 +1,5 @@
 package com.serious.business.configuration.launch;
 
-import java.beans.XMLEncoder;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.DebugPlugin;
@@ -14,7 +8,8 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 
-import com.serious.business.common.Constants;
+import com.serious.business.configuration.filters.CycleFilter;
+import com.serious.business.configuration.filters.exception.FilterException;
 
 public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 
@@ -24,49 +19,20 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
 	public void launch(ILaunchConfiguration configuration, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
 		
-//		XMLEncoder encoder = new XM
-		// TODO Auto-generated method stub
-//		configuration.launch(mode, monitor);
-//		.GroupLaunchConfigurationDelegate
-//		DebugPlugin.getDefault().getLaunchManager().isExistingLaunchConfigurationName(name)
-//		IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE;
+		IGroupConfigurationRunner runner = new GroupConfigurationRunner();
 		
-//		Launch
-//		hasCycles(configuration, new HashSet<ILaunchConfiguration>());
-	}
-
-	
-	void hasCycles(ILaunchConfiguration cur, Set<ILaunchConfiguration> graph) {
+//		GroupLaunchConfiguration groupLaunchConfiguration = GroupLaunchConfiguration.createGroupConfiguration(configuration);
 		
-		if (graph.contains(cur)) {
-			System.out.println("has cycles");
-			return;
-		}
-		
-		Set<ILaunchConfiguration> childsGroupConfigurations = new HashSet<ILaunchConfiguration>(graph);
-		childsGroupConfigurations.add(cur);
+		runner.addFilter(new CycleFilter());
 		
 		try {
-			List<String> childs = 
-					cur.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-							new ArrayList<String>());
-			
-
-			
-			for (String childString : childs) {
-				ILaunchConfiguration configuration = mgr.getLaunchConfiguration(childString);
-				hasCycles(configuration, childsGroupConfigurations);
-			}
-
-		} catch (CoreException e) {
+			runner.runConfiguration(configuration, mode, monitor);
+		} catch (FilterException e) {
+			e.printStackTrace();
 		}
-		
-		if (graph.size() == 0) {
-			System.out.println("No cycles");
-		} 
-			
+
 	}
-	
+
 	
 	
 	

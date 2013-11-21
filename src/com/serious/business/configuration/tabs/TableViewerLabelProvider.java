@@ -1,7 +1,5 @@
 package com.serious.business.configuration.tabs;
 
-import java.util.Map;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -10,7 +8,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-import com.serious.business.common.Constants;
+import com.serious.business.configuration.model.ChildLaunchConfiguration;
 
 public class TableViewerLabelProvider implements ITableLabelProvider {
 	
@@ -18,43 +16,34 @@ public class TableViewerLabelProvider implements ITableLabelProvider {
 	
 	@Override
 	public void addListener(ILabelProviderListener listener) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public boolean isLabelProperty(Object element, String property) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void removeListener(ILabelProviderListener listener) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public Image getColumnImage(Object element, int columnIndex) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
 		
-		Map<String, String> config = (Map<String, String>) element;
-		String launchMemento = config.get(Constants.MEMENTO_KEY);
+		ChildLaunchConfiguration childLaunchConfiguration = (ChildLaunchConfiguration) element;
 		
 		ILaunchConfiguration configuration = null;
 		try {
-			configuration = manager.getLaunchConfiguration(launchMemento);
+			configuration = manager.getLaunchConfiguration(childLaunchConfiguration.getMemento());
 		} catch (CoreException e1) {
 			e1.printStackTrace();
 			return null;
@@ -68,8 +57,8 @@ public class TableViewerLabelProvider implements ITableLabelProvider {
 			try {
 				return configuration.getCategory();
 			} catch (CoreException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return null;
 			}
 		}
 		

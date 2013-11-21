@@ -10,4 +10,10 @@ public class ClosedProjectFilter implements IConfigurationFilter {
 		return false;
 	}
 
+	@Override
+	public String getErrorMessage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

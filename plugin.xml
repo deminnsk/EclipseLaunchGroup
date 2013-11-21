@@ -2,13 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
 
-<!--	<extension point="org.eclipse.debug.core.launchConfigurationComparators">
-		<launchConfigurationComparator
-			id="com.serious.business.launch.childsComparator"
-			class="com.serious.business.configuration.tabs.LaunchGroupComparator"
-			attribute="com.serious.business.common.GROUP_CONFIGURATION_KEY"/>
-	</extension> -->
-
 	<extension point="org.eclipse.debug.core.launchConfigurationTypes">
 	    <launchConfigurationType
 	        name="Launch Group"

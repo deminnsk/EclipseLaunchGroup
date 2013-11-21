@@ -1,11 +1,6 @@
 package com.serious.business.configuration.tabs;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
@@ -35,22 +30,22 @@ import org.eclipse.swt.widgets.TableColumn;
 
 import com.serious.business.common.Constants;
 import com.serious.business.common.Messages;
-import com.serious.business.common.utils.MapUtils;
+import com.serious.business.configuration.model.ChildLaunchConfiguration;
+import com.serious.business.configuration.model.GroupLaunchConfiguration;
 import com.serious.business.configuration.wizard.LaunchConfigurationWizard;
 
 public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 	private static final String tabName = "Launch Group";
 
-	private ILaunchConfigurationWorkingCopy workingCopy;
-	private List<Map<String, String>> configurations;
+	private GroupLaunchConfiguration groupLaunchConfiguration;
 	private ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 	private CheckboxTableViewer configurationsTableViewer;
 	private int selectionIndex = -1;
 	
 	private Button upButton;
 	private Button downButton;
-	private Button editButton;
+//	private Button editButton;
 	private Button addButton;
 	private Button removeButton;
 	
@@ -67,7 +62,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 				handleUpButton();
 			} else if (source == downButton) {
 				handleDownButton();
-			} else if (source == editButton) {
+//			} else if (source == editButton) {
 
 			} else if (source == addButton) {
 				handleAddButton();
@@ -134,8 +129,9 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			@Override
 			public boolean isChecked(Object element) {
 				
-				Map<String, String> config = (Map<String, String>) element;
-				return Boolean.valueOf(config.get(Constants.ACTIVE_KEY));
+				ChildLaunchConfiguration childLaunchConfiguration = (ChildLaunchConfiguration) element;
+				return childLaunchConfiguration.isActivated();
+
 			}
 		});
 		
@@ -152,11 +148,11 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 			
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
-				
-				int index = LaunchGroupTab.this.configurations.indexOf(event.getElement());
-				Map<String, String> configuration = LaunchGroupTab.this.configurations.get(index);
-				configuration.put(Constants.ACTIVE_KEY, String.valueOf(event.getChecked()));
-				updateLaunchConfigurationDialog();
+				//TODO: fix
+//				int index = LaunchGroupTab.this.configurations.indexOf(event.getElement());
+//				Map<String, String> configuration = LaunchGroupTab.this.configurations.get(index);
+//				configuration.put(Constants.ACTIVE_KEY, String.valueOf(event.getChecked()));
+//				updateLaunchConfigurationDialog();
 
 			}
 		});
@@ -195,38 +191,20 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {		
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		
-		try {
-			this.workingCopy = configuration.getWorkingCopy();
-			
-			List<String> stringConfigurations = new ArrayList<String>(workingCopy.getAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-					new ArrayList<String>()));
-			
-			if (this.configurations == null) {
-				this.configurations = new ArrayList<Map<String,String>>();
-			}
-			
-			this.configurations.clear();
-			for (String stringConf : stringConfigurations) {
-				this.configurations.add(MapUtils.mapFromString(stringConf));
-			}
-
-		} catch (CoreException e) {
-			this.workingCopy = null;
-			e.printStackTrace();
-		}
-		
-		configurationsTableViewer.setInput(this.configurations);
+		this.groupLaunchConfiguration = GroupLaunchConfiguration.createGroupConfiguration(configuration);
+		configurationsTableViewer.setInput(this.groupLaunchConfiguration);
 	}
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		
-		configuration.setAttribute(Constants.GROUP_CONFIGURATION_KEY, 
-				MapUtils.stringListFromMapList(this.configurations));
+		if (groupLaunchConfiguration != null) {
+			configuration.setAttribute(Constants.GROUP_CONFIGURATION_KEY, groupLaunchConfiguration.toString());
+			
+		}
 		configuration.setAttribute("eee", (String)null);
 		
 		configurationsTableViewer.refresh();
@@ -250,7 +228,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 				upButton.setEnabled(false);
 			} 
 			
-			if (selectionIndex == configurations.size() - 1) {
+			if (selectionIndex == this.groupLaunchConfiguration.getChilds().size() - 1) {
 				downButton.setEnabled(false);
 			}
 			
@@ -265,7 +243,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private void handleUpButton(){
 
 		if (selectionIndex != -1) {
-			Collections.swap(configurations, selectionIndex, selectionIndex - 1);
+			Collections.swap(this.groupLaunchConfiguration.getChilds(), selectionIndex, selectionIndex - 1);
 			configurationsTableViewer.refresh();
 			select(selectionIndex - 1);
 		}
@@ -276,7 +254,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private void handleDownButton(){
 		
 		if (selectionIndex != -1) {
-			Collections.swap(configurations, selectionIndex, selectionIndex + 1);
+			Collections.swap(this.groupLaunchConfiguration.getChilds(), selectionIndex, selectionIndex + 1);
 			configurationsTableViewer.refresh();
 			select(selectionIndex + 1);
 		}
@@ -287,7 +265,7 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 	private void handleRemoveButton(){
 		
 		if (selectionIndex != -1) {
-			configurations.remove(selectionIndex);
+			this.groupLaunchConfiguration.getChilds().remove(selectionIndex);
 			configurationsTableViewer.refresh();
 			select(selectionIndex);
 		
@@ -316,8 +294,8 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 		
 		int indexForSelect = index;
 		
-		if (index > configurations.size() - 1) {
-			indexForSelect = configurations.size() - 1;
+		if (index > this.groupLaunchConfiguration.getChilds().size() - 1) {
+			indexForSelect = this.groupLaunchConfiguration.getChilds().size() - 1;
 		} else if (index < 0) {
 			indexForSelect = 0;
 		}
@@ -330,14 +308,11 @@ public class LaunchGroupTab extends AbstractLaunchConfigurationTab {
 
 		try {
 			
-			Map<String, String> recordMap = new HashMap<String, String>();
-			recordMap.put(Constants.MEMENTO_KEY, configuration.getMemento());
-			recordMap.put(Constants.ACTIVE_KEY, String.valueOf(true));
+			ChildLaunchConfiguration childLaunchConfiguration = 
+					ChildLaunchConfiguration.createConfiguration(configuration);
 			
-			// hack to make configuration unique for save
-			recordMap.put("any_key", UUID.randomUUID().toString());
-			
-			this.configurations.add(recordMap);
+			this.groupLaunchConfiguration.addChild(childLaunchConfiguration);
+			setDirty(true);
 			updateLaunchConfigurationDialog();
 			
 			
