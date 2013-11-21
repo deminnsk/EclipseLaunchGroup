@@ -21,6 +21,8 @@ Eclipse Launch Group
 
 * com.serious.business.configuration.wizard - диалог добавления конфигураций
 
+* com.serious.business.common - константы и текстовые данные 
+
 			
 
  
